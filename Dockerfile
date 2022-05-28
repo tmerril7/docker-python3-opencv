@@ -24,7 +24,10 @@ RUN apt-get -qq update \
         libopenjp2-7-dev \
         libavformat-dev \
         libpq-dev \
+        ffmpeg \
     && pip install numpy \
+        imutils \
+        Image
     && wget -q https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip -O opencv.zip \
     && unzip -qq opencv.zip -d /opt \
     && rm -rf opencv.zip \
