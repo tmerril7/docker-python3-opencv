@@ -27,7 +27,7 @@ RUN apt-get -qq update \
         ffmpeg \
     && pip install numpy \
         imutils \
-        Image
+        Image \
     && wget -q https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip -O opencv.zip \
     && unzip -qq opencv.zip -d /opt \
     && rm -rf opencv.zip \
