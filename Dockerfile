@@ -65,5 +65,6 @@ RUN apt-get -qq update \
  ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
  RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
  ADD start.sh /
+ RUN chmod +x /start.sh
  CMD ["/start.sh"]
  ENTRYPOINT ["/init"]
