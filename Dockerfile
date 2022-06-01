@@ -67,4 +67,5 @@ RUN apt-get -qq update \
  ADD start.sh /
  RUN chmod 777 /start.sh
  CMD ["/start.sh"]
+ RUN pip install requests
  ENTRYPOINT ["/init"]
