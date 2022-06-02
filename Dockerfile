@@ -68,4 +68,5 @@ RUN apt-get -qq update \
  RUN chmod 777 /start.sh
  CMD ["/start.sh"]
  RUN pip install requests datetime
+ RUN mkdir /tmp/record
  ENTRYPOINT ["/init"]
