@@ -9,11 +9,11 @@ from subprocess import Popen, PIPE
 import imutils
 logfile = "/tmp/record/log"
 in_filename = ""
-path = "/tmp/record"
+path = "/tmp/test"
 go = True
 #f = open(logfile,"a")
 
-def mot_scan(file):
+def mot_scan(file)
         trigger = False
         pts = numpy.array([[2,389],[713,295],[949,334],[960,720],[143,692],[2,389]])
         numCnts = 0
@@ -134,40 +134,41 @@ def mot_scan(file):
                
                 os.remove(testfile)
                 #os.rename(testfile,path+"/"+"no_mot"+in_filename)
+
 doubleCheck = True
 fsize = 0
 selectedName = ''
-while go:
-        with os.scandir(path) as it:
-                selectedName = ''
-                oldestTime = 0
-                for entry in it:
-                        if entry.name.startswith('new'):
-                                if oldestTime == 0:
-                                        oldestTime = os.stat(path+'/'+entry.name).st_mtime
-                                        selectedName = path+'/'+entry.name
-                                else: 
-                                        if os.stat(path+'/'+entry.name).st_mtime - oldestTime < 0:
-                                                oldestTime = os.stat(path+'/'+entry.name).st_mtime
-                                                selectedName = path+'/'+entry.name
-                
 
-        if selectedName != '':
-                fSize = os.stat(selectedName).st_size
-                print('\033[2K\r{}'.format(fSize),end='')
-                while doubleCheck:
-                        time.sleep(3)
-                        print('\033[2K\r{}'.format(os.stat(selectedName).st_size),end='')
-                        if fSize == os.stat(selectedName).st_size:
-                                print('\033[2K\r' + selectedName,end='')
-                                mot_scan(selectedName)
-                                break
-                        else:
-                                fSize = os.stat(selectedName).st_size
-        else:
-                print('\033[2K\r'+'no files to process',end='')
-                time.sleep(10)
-#f.close()
+while go:
+    with os.scandir(path) as it:
+            selectedName = ''
+            oldestTime = 0
+            for entry in it:
+                if entry.name.startswith('test'):
+                    if oldestTime == 0:
+                        oldestTime = os.stat(path+'/'+entry.name).st_mtime
+                        selectedName = path+'/'+entry.name
+                    else: 
+                        if os.stat(path+'/'+entry.name).st_mtime - oldestTime < 0:
+                            oldestTime = os.stat(path+'/'+entry.name).st_mtime
+                            selectedName = path+'/'+entry.name
+    if selectedName != '':
+            fSize = os.stat(selectedName).st_size
+            print('\033[2K\r{}'.format(fSize),end='')
+            while doubleCheck:
+                    time.sleep(3)
+                    print('\033[2K\r{}'.format(os.stat(selectedName).st_size),end='')
+                    if fSize == os.stat(selectedName).st_size:
+                            print('\033[2K\r' + selectedName,end='')
+                            mot_scan(selectedName)
+                            break
+                    else:
+                            fSize = os.stat(selectedName).st_size
+    else:
+            print('\033[2K\r'+'no files to process',end='')
+            time.sleep(10)
+
+""" #f.close()
 #q=queue.Queue()
 
 # ffmpeg -rtsp_transport tcp -i "rtsp://admin:admin@10.0.72.15/defaultPrimary?streamType=u" -vcodec copy -an -f segment -segment_time 10 -reset_timestamps 1 -strftime 1 "/tmp/record/new_%j-%H.%M.%S.mp4"
@@ -215,4 +216,4 @@ while go:
 #               if time.time() > timeout:
 #                       break
 #       else:
-#               break
+#               break """
