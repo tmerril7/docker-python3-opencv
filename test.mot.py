@@ -7,7 +7,7 @@ import datetime
 from PIL import Image
 from subprocess import Popen, PIPE
 import imutils
-import threading queue
+
 
 """ Constant Variables """
 resize_height = 720
@@ -161,20 +161,6 @@ while go:
                 frame_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
                 mot_scan(fileCount)
 
-                def Process():
-                        
-                        while going = True:
-                                if q.empty() == False:
-                                        refined = mot_scan(q.get)
-                                        Image.fromarray(frame).save(p.stdin,'bmp')
-                                else:
-                                        going = False
-                        p.stdin.close()
-                        p.wait()
-
-
-
-                                """   end threading   """
 
         else:
                 print('\033[2K\r'+'no more files to process',end='')
