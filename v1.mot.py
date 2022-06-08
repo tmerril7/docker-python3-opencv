@@ -44,7 +44,7 @@ if len(sys.argv) > 1:
         if sys.argv[1] == 'F':
                 do_dilate = False
 else:
-        print('Usage: <script> [T/F dilation] [T/F Blur] [samples/sec] [T/F Mask] [dilate iterations] [diff threshold] [(must be odd)blur size] [min area]')
+        print('Usage: <script> [T/F dilation] [T/F Blur] [samples/sec] [T/F Mask] [dilate iterations] [diff threshold] [(must be odd)blur size] [min area] [trigger threshold]')
         exit()
 if len(sys.argv) > 2:
         if sys.argv[2] == 'F':
@@ -62,11 +62,12 @@ if len(sys.argv) > 7:
         blur_size = int(sys.argv[7])
 if len(sys.argv) > 8:
         min_area = int(sys.argv[8])
-
+if len(sys.argv) > 9:
+        perc_screen_threshold = int(sys.argv[9])
 
 logfile = "/tmp/record/log"
 in_filename = ""
-path = "/tmp/test"
+path = "/tmp/record"
 go = True
 #f = open(logfile,"a")
 
@@ -120,7 +121,7 @@ def mot_scan(fileCount,name):
         ret, frame = cap.read()
         frame_count = frame_count + 1
         gray = process_frame(frame)
-        p = Popen(['ffmpeg','-y','-f','image2pipe','-vcodec','bmp','-r',str(samples_per_minute/60),'-i','-','-vcodec','h264','-preset','ultrafast','-crf','32','-r',str(samples_per_minute/60),'out'+'-'+str(fileCount)+name+'.mp4'],stdin=PIPE)
+        #p = Popen(['ffmpeg','-y','-f','image2pipe','-vcodec','bmp','-r',str(samples_per_minute/60),'-i','-','-vcodec','h264','-preset','ultrafast','-crf','32','-r',str(samples_per_minute/60),'out'+'-'+str(fileCount)+name+'.mp4'],stdin=PIPE)
         while ret:
                 while frame_count < samples:
                         ret, frame = cap.read()
@@ -147,9 +148,9 @@ def mot_scan(fileCount,name):
                 if percScreen >= perc_screen_threshold:
                         trigger = True
                         break
-                dilated = cv2.putText(dilated, "area: {:.3%}".format(percScreen),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 1, (255,200,255),1)
-                dilated = cv2.putText(dilated,"bodies: {}".format(cnts) + ' ({}/'.format(b_u_m) + '{})'.format(b_o_m),(10,80),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),1)
-                
+                #dilated = cv2.putText(dilated, "area: {:.3%}".format(percScreen),(10,20),cv2.FONT_HERSHEY_SIMPLEX, 1, (255,200,255),1)
+                #dilated = cv2.putText(dilated,"bodies: {}".format(cnts) + ' ({}/'.format(b_u_m) + '{})'.format(b_o_m),(10,80),cv2.FONT_HERSHEY_SIMPLEX,1,(255,255,255),1)
+                """
                 if do_blobdetect:
                         detector = cv2.SimpleBlobDetector_create(params)
                         keypoints = detector.detect(dilated)
@@ -159,8 +160,9 @@ def mot_scan(fileCount,name):
                 else:
                         im = Image.fromarray(dilated)
                         im.save(p.stdin, 'bmp')
-        p.stdin.close()
-        p.wait()
+                """
+        #p.stdin.close()
+        #p.wait()
         cap.release()
         return trigger
 
@@ -197,49 +199,56 @@ def mot_scan(fileCount,name):
                 #os.rename(testfile,path+"/"+"no_mot"+in_filename)
                 """
 
-
 fsize = 0
 selectedName = ''
-fileCount = 0
 num_files = 1
-while fileCount < num_files:                
+while go:                
         with os.scandir(path) as it:
+
+                #get file count in process folder
+                """
                 num_files = 0
                 with os.scandir(path) as it2:
                         for entry in it2:
                                 if entry.name.startswith('test'):
                                         num_files = num_files + 1
-
-                #this block goes for the oldest file
                 """
+                #this block goes for the oldest file
+
                 selectedName = ''
                 oldestTime = 0
                 for entry in it:
-                        if entry.name.startswith('test'):
+                        if entry.name.startswith('new'):
                                 if oldestTime == 0:
                                     oldestTime = os.stat(path+'/'+entry.name).st_mtime
-                                    selectedName = entry.name
+                                    selectedName = path+'/'+entry.name
                                 else: 
                                         if os.stat(path+'/'+entry.name).st_mtime - oldestTime < 0:
                                                 oldestTime = os.stat(path+'/'+entry.name).st_mtime
-                                                selectedName = entry.name
-                """
+                                                selectedName = path+'/'+entry.name
 
-                for entry in it:
-                        if entry.name.startswith('test'):
-                                fileCount = fileCount + 1
-                                #fullName = path+'/'+str(fileCount)+'.'+selectedName
-                                fullName = path+'/'+entry.name
-                                #os.rename(path+'/'+selectedName,fullName)
-                                global cap
-                                cap = cv2.VideoCapture(fullName)
-                                global frame_height
-                                global frame_width
-                                frame_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-                                frame_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-                                mot_scan(fileCount,entry.name)
-        print('\033[2K\r'+'no more files to process')
-        break
+
+                if selectedName != '':
+                        fSize = os.stat(selectedName).st_size
+                        print('\033[2K\r{}'.format(fSize),end='')
+                        while True:
+                                time.sleep(3)
+                                print('\033[2K\r{}'.format(os.stat(selectedName).st_size),end='')
+                                if fSize == os.stat(selectedName).st_size:
+                                        global cap
+                                        cap = cv2.VideoCapture(fullName)
+                                        global frame_height
+                                        global frame_width
+                                        frame_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                                        frame_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                                        mot_scan(selectedName)
+                                        break
+                                else:
+                                        fSize = os.stat(selectedName).st_size
+                else:
+                        print('\033[2K\r'+'no files to process',end='')
+                        time.sleep(10)
+       
 
 """ #f.close()
 

@@ -42,8 +42,10 @@ def diff_subtot_area(gray0,gray):
         dilated = cv2.dilate(thresh,None,iterations=dilate_iterations)
         cnts = cv2.findContours(dilated.copy(),cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         cnts = imutils.grab_contours(cnts)
+        subtot = 0
         for c in cnts:
                 subtot = subtot + cv2.contourArea(c)
+        
         return subtot, dilated, cnts
 
 def mot_scan(fileCount):
@@ -74,7 +76,7 @@ def mot_scan(fileCount):
                 gray = process_frame(frame)
                 subtot, dilated, cnts = diff_subtot_area(gray0,gray)
 
-                        """smooth area readings"""
+                """smooth area readings"""
                 tot = tot - areas[areaIndex]
                 areas[areaIndex] = subtot
                 tot = tot + areas[areaIndex]
@@ -137,14 +139,13 @@ selectedName = ''
 fileCount = 0
 while go:
         with os.scandir(path) as it:
-                global selectedName
                 selectedName = ''
                 oldestTime = 0
                 for entry in it:
                         if entry.name.startswith('test'):
                                 if oldestTime == 0:
-                                oldestTime = os.stat(path+'/'+entry.name).st_mtime
-                                selectedName = entry.name
+                                        oldestTime = os.stat(path+'/'+entry.name).st_mtime
+                                        selectedName = entry.name
                                 else: 
                                         if os.stat(path+'/'+entry.name).st_mtime - oldestTime < 0:
                                                 oldestTime = os.stat(path+'/'+entry.name).st_mtime
