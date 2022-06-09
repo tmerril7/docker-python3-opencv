@@ -70,5 +70,6 @@ RUN apt-get -qq update \
  RUN pip install requests datetime
  RUN mkdir /tmp/record \
     && mkdir /tmp/test \
+    && apt-get update \
     && apt-get install -y tmux
  ENTRYPOINT ["/init"]
