@@ -67,7 +67,7 @@ RUN apt-get -qq update \
  ADD start.sh /
  RUN chmod 777 /start.sh
  CMD ["/start.sh"]
- RUN pip install requests datetime
+ RUN pip install requests datetime pymongo
  RUN mkdir /tmp/record \
     && mkdir /tmp/test \
     && apt-get update \
