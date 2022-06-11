@@ -69,6 +69,7 @@ RUN apt-get -qq update \
  CMD ["/start.sh"]
  RUN pip install requests datetime pymongo[srv]
  RUN mkdir /tmp/record \
+    && mkdir /tmp/staging \
     && mkdir /tmp/test \
     && apt-get update \
     && apt-get install -y tmux
