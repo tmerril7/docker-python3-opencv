@@ -67,7 +67,7 @@ RUN apt-get -qq update \
  ADD start.sh /
  RUN chmod 777 /start.sh
  CMD ["/start.sh"]
- RUN pip install requests datetime pymongo[srv]
+ RUN pip install requests datetime pymongo[srv] python-telegram-bot
  RUN mkdir /tmp/record \
     && mkdir /tmp/staging \
     && mkdir /tmp/test \
