@@ -67,8 +67,8 @@ RUN apt-get -qq update \
  ADD /ext /
  RUN chmod 777 /ext/ffm.v.2.1.py
  RUN chmod 777 /ext/mot.v.2.1.py
- ADD /etc/services.d/motion_detect/run /
- RUN chmod 777 /etc/services.d/motion_detect/run
+ ADD /etc/services.d/mot_detect/run /
+ RUN chmod 777 /etc/services.d/mot_detect/run
  CMD ["sh","-c",'python /ext/mot.v.2.1.py $MOT_CAMERANAME $MONGO_USER $MONGO_PASS']
  RUN pip install requests datetime pymongo[srv] python-telegram-bot av
  RUN mkdir /tmp/record \
