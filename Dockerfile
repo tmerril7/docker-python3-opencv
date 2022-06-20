@@ -66,7 +66,7 @@ RUN apt-get -qq update \
  RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
  ADD start.sh /
  RUN chmod 777 /start.sh
- CMD ["/start.sh"]
+ CMD ["sh","-c",'python /ext/v2.1.py $MOT_CAMERANAME $MONGO_USER $MONGO_PASS']
  RUN pip install requests datetime pymongo[srv] python-telegram-bot av
  RUN mkdir /tmp/record \
     && mkdir /tmp/staging \
