@@ -1,2 +1,2 @@
-#!/bin/sh
+#!/command/with-contenv bash
 python3 /ext/ffm.v.2.1.py $MOT_CAMERANAME $MONGO_USER $MONGO_PASS
