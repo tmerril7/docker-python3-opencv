@@ -67,7 +67,7 @@ RUN apt-get -qq update \
  ADD /ext /ext
  RUN chmod 777 /ext/ffm.v.2.1.py
  RUN chmod 777 /ext/mot.v.2.1.py
- ADD /etc/services.d/mot_detect/run /etc/services.d/mot_detect/run
+ ADD /etc/services.d /etc/services.d
  RUN chmod 777 /etc/services.d/mot_detect/run
  RUN chmod 777 /etc/services.d/ff/run
  RUN pip install requests datetime pymongo[srv] python-telegram-bot av
