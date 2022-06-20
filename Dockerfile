@@ -64,10 +64,10 @@ RUN apt-get -qq update \
  RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
  ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
  RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
- ADD /ext /
+ ADD /ext /ext
  RUN chmod 777 /ext/ffm.v.2.1.py
  RUN chmod 777 /ext/mot.v.2.1.py
- ADD /etc/services.d/mot_detect/run /
+ ADD /etc/services.d/mot_detect/run /etc/services/d/mot_detect/run
  RUN chmod 777 /etc/services.d/mot_detect/run
  CMD ["sh","-c",'python /ext/mot.v.2.1.py $MOT_CAMERANAME $MONGO_USER $MONGO_PASS']
  RUN pip install requests datetime pymongo[srv] python-telegram-bot av
