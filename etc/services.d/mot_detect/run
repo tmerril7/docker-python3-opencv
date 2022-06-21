@@ -1,2 +1,3 @@
 #!/command/with-contenv bash
+exec 2>&1
 python3 /ext/mot.v.2.1.py $MOT_CAMERANAME $MONGO_USER $MONGO_PASS
