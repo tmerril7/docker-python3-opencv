@@ -5,6 +5,17 @@ import os
 import time
 import pymongo
 import datetime
+import logging
+from logging.handlers import RotatingFileHandler
+
+loggerFile = '/var/log/ffmpeg.log'
+logger = logging.getLogger("Rotating Log")
+logger.setLevel(logging.INFO)
+handler = RotatingFileHandler(loggerFile, maxBytes=500000, backupCount=4)
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 basepath = '/ramdisk'
 
@@ -21,8 +32,8 @@ db = client.motionDetection
 mongoVars = db.cameras.find_one({'cameraName':args.cameraName},{'_id':0})
 
 while mongoVars == None:
-    print(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).strftime('%b %d, %Y - %H:%M: ')\
-    + "can't find camera in database",end='\r')
+    logger.info(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).strftime('%b %d, %Y - %H:%M: ')\
+    + "can't find camera in database")
     time.sleep(10)
     mongoVars = db.cameras.find_one({'cameraName':args.cameraName},{'_id':0})
 while True:
@@ -30,8 +41,8 @@ while True:
         testURL = mongoVars['rtspURL']
         break
     except:
-        print(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).strftime('%b %d, %Y - %H:%M: ')\
-        + "no rtspURL in database for this camera",end='\r')
+        logger.warning(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).strftime('%b %d, %Y - %H:%M: ')\
+        + "no rtspURL in database for this camera")
         time.sleep(10)
         mongoVars = db.cameras.find_one({'cameraName':args.cameraName},{'_id':0})
         
@@ -47,7 +58,7 @@ d = shlex.split("ffmpeg -rtsp_transport tcp -stimeout 5000000 -use_wallclock_as_
 while True:
     time.sleep(1)
     try:
-        print('###starting###')
+        logger.info('###starting###')
         
         if not os.path.isdir(basepath + '/' + args.cameraName):
             os.mkdir(basepath + '/' + args.cameraName)
@@ -57,10 +68,10 @@ while True:
             for name in it:
                 count = count + 1
             if count > 12:
-                print('file buffer full - restarting')
+                logger.info('file buffer full - restarting')
                 continue
     except:
-        print('problem occurred')
+        logger.warning('problem occurred')
         continue
     sp = subprocess.Popen(d)
     while True:
@@ -78,12 +89,12 @@ while True:
                     sp.terminate()
                     break
         except:
-            print('crashed')
+            logger.error('crashed')
             sp.terminate()
             break
     sp.wait()
     if sp.returncode == 0:
-        print(sp.returncode)
+        logger.info(sp.returncode)
     if sp.returncode != 0:
-        print('it broke')
-        print(sp.returncode)
+        logger.error('it broke')
+        logger.info(sp.returncode)
