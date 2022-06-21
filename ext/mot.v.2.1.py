@@ -1,5 +1,4 @@
-#V2.1
-from tracemalloc import start
+#V2.2
 import av
 import av.datasets
 import cv2
@@ -11,13 +10,28 @@ import datetime
 from PIL import Image
 from subprocess import Popen, PIPE
 import imutils
-import sys
 import pymongo
 import shutil
 import argparse
+import logging
+from logging.handlers import RotatingFileHandler
+
+#logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s')
+
+def create_rotating_log(path):
+        global logger
+        logger = logging.getLogger("Rotating Log")
+        logger.setLevel(logging.INFO)
+        handler = RotatingFileHandler(path, maxBytes=500000, backupCount=4)
+        formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+loggerFile = '/var/log/motion.log'
+create_rotating_log(loggerFile)
 
 """ Constant Variables """
-refresh_mongo_time = 10.0 * 60.0
+refresh_mongo_time = 5.0 * 60.0
 input_fps = 20
 resize_height = 720
 blur_size = 15
@@ -70,14 +84,18 @@ def update_mongo():
         global mongo_vars
         mongo_vars = db.cameras.find_one({'cameraName':cameraName},{'_id':0})
         while mongo_vars == None:
+                '''
                 print(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).strftime('%b %d, %Y - %H:%M: ')\
                 + "can't find camera in database",end='\r')
+                '''
+                logger.warning(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).strftime('%b %d, %Y - %H:%M: ')\
+                + "can't find camera in database")
                 time.sleep(10)
                 mongo_vars = db.cameras.find_one({'cameraName':cameraName},{'_id':0})
         try:
                 while mongo_vars['disabled'] == True:
-                        print(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).strftime('%b %d, %Y - %H:%M: ')\
-                        + "camera is disabled",end='\r')
+                        logger.info(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).strftime('%b %d, %Y - %H:%M: ')\
+                        + "camera is disabled")
                         time.sleep(refresh_mongo_time)
                         mongo_vars = db.cameras.find_one({'cameraName':cameraName},{'_id':0})
         except:
@@ -115,11 +133,11 @@ def update_mongo():
         global last_mongo_update
 
         if len(mongo_vars['deviceName']) > 0:
-                print('done loading parameters from mongoDB')
+                logger.info('done loading parameters from mongoDB')
                 last_mongo_update = int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp())
                 return True
         else:
-                print('failed getting parameters from mongoDB')
+                logger.warning('failed getting parameters from mongoDB')
                 return False
 
 last_mongo_update = 0
@@ -154,27 +172,23 @@ def heartBeat():
         return a.status_code
 
 
-
-logfile = "/tmp/record/log"
-logfails = '/tmp/failLog'
 in_filename = ""
 path = "/ramdisk/"+cameraName
 uploadPath = '/tmp/staging'
-#f = open(logfile,"a")
 
 def process_frame(in_frame,makeThumb,makeMask):
         resi = cv2.resize(in_frame,(int(resize_height/frame_height*frame_width),resize_height))
         if makeThumb:
                 im = Image.fromarray(cv2.cvtColor(resi, cv2.COLOR_BGR2RGB))
                 im.save(path + '/' + 'thumb.jpg','jpeg')
-                print('\ncreated thumb.jpg\n')
+                logger.info('created thumb.jpg')
         mask = numpy.zeros(resi.shape[:2],numpy.uint8)
         cv2.drawContours(mask,[pts],-1,(255,255,255),-1,cv2.LINE_AA)
         if makeMask:
                 im = Image.fromarray(cv2.cvtColor(cv2.polylines(resi,[pts],True,(0,0,255),2), cv2.COLOR_BGR2RGB))
                 #im = Image.fromarray(cv2.polylines(tmpFrame,pts,True,255,255,255))
                 im.save(path + '/' + 'mask.jpg','jpeg')
-                print('\ncreated mask.jpg\n')
+                logger.info('created mask.jpg')
         if do_mask == True:
                 dst = cv2.bitwise_and(resi,resi,mask=mask)
         else:
@@ -298,7 +312,7 @@ def mot_scan_lib_av(name,thumb,mask):
         try:
             container = av.open(av.datasets.curated(name))
         except:
-            print('something bad happened')
+            logger.error('something bad happened')
             return trigger, maxAve
         stream = container.streams.video[0]
         stream.thread_type = "AUTO"
@@ -399,27 +413,24 @@ while True:
                                 frame_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
                                 frame_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
                                 if frame_height <=1:
-                                        f = open(logfails,"a") 
-                                        f.write('Failed div 0 :'+selectedName)
-                                        f.close()
-                                        print('failed Div 0: '+ selectedName)
+                                        logger.warning('failed Div 0: '+ selectedName)
                                         trigger = False
                                         maxAve = 0
                                         break
                                 start_stopwatch = time.time()
                                 trigger, maxAve = mot_scan(selectedName,thumb_exists,mask_exists)
                                 duration = time.time() - start_stopwatch
-                                print('\rtime to run motion scan: {:.3}'.format(duration))
+                                logger.info('time to run motion scan: {:.3}'.format(duration))
                                 break
                             else:
                                 start_stopwatch = time.time()
                                 trigger, maxAve = mot_scan_lib_av(selectedName,thumb_exists,mask_exists)
                                 duration = time.time() - start_stopwatch
-                                print('\rtime to run motion scan: {:.3}'.format(duration))
+                                logger.info('time to run motion scan: {:.3}'.format(duration))
                                 break
                         else:
                                 fSize = os.stat(selectedName).st_size
-                print(' '+str(trigger)+' {:.5f}'.format(maxAve)+' {} {}'.format(frame_width,frame_height))
+                logger.info(' '+str(trigger)+' {:.5f}'.format(maxAve)+' {} {}'.format(frame_width,frame_height))
                 if trigger == True:
                         newname = uploadPath + '/' \
                                 + str(int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp())) \
@@ -440,18 +451,18 @@ while True:
 
                 #  periodic mongodb refresh
         if int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp()) - int(last_mongo_update) >= int(refresh_mongo_time):
-                print('refreshing mongodb at {}'.format(str(int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp()))))
+                logger.info('refreshing mongodb at {}'.format(str(int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp()))))
                 while update_mongo() == False:
                         time.sleep(60)
 
                 # periodic hearbeat
         if int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp()) - int(lastHeartBeat) >= int(heartBeatInterval):
-                print('sending heartbeat at {}'.format(str(int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp()))))
+                logger.info('sending heartbeat at {}'.format(str(int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp()))))
                 if heartBeat() == 200:
-                        print('heartBeat success')
+                        logger.info('heartBeat success')
                         lastHeartBeat = int(datetime.datetime.now(tz=datetime.timezone(datetime.timedelta(hours=-6))).timestamp())
                 else:
-                        print('problem sending hearbeat')
+                        logger.warning('problem sending hearbeat')
         
         
 
