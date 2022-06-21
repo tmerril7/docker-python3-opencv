@@ -64,16 +64,15 @@ RUN apt-get -qq update \
  RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
  ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
  RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
- ADD /ext /ext
- RUN chmod 777 /ext/ffm.v.2.1.py
- RUN chmod 777 /ext/mot.v.2.1.py
- ADD /etc/services.d /etc/services.d
- RUN chmod 777 /etc/services.d/mot_detect/run
- RUN chmod 777 /etc/services.d/ff/run
  RUN pip install requests datetime pymongo[srv] python-telegram-bot av
  RUN mkdir /tmp/record \
     && mkdir /tmp/staging \
     && mkdir /tmp/test \
     && apt-get update \
     && apt-get install -y tmux
+ ADD /ext /ext
+ ADD /etc /etc
+ RUN chmod -R 777 /etc/services.d
+ RUN chmod -R 777 /etc/cont-init.d
+ RUN chmod -R 777 /ext
  ENTRYPOINT ["/init"]
